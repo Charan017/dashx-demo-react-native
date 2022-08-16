@@ -1,6 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import jwt_decode from 'jwt-decode';
 import React, {useContext, useState} from 'react';
 import {
   StyleSheet,
@@ -8,9 +5,10 @@ import {
   ToastAndroid,
   TouchableOpacity,
   View,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {BASE_URL} from '../../components/APIClient';
 import Button from '../../components/button';
 import CheckBox from '../../components/checkBox';
 import Header from '../../components/header';
@@ -20,6 +18,9 @@ import ShowError from '../../components/showError';
 import validate from '../../components/validator';
 import AppContext from '../../useContext/AppContext';
 import {storeValueForKey} from '../../utils/LocalStorage';
+import jwt_decode from 'jwt-decode';
+import {showToast} from '../../utils/LocalStorage';
+import {postmethod} from '../../utils/LocalStorage';
 
 const Login = ({navigation}) => {
   const {setUser, setUserToken} = useContext(AppContext);
@@ -31,10 +32,6 @@ const Login = ({navigation}) => {
   });
   const [hidePassword, setHidePassword] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const showToast = responseDaata => {
-    ToastAndroid.show(responseDaata, ToastAndroid.SHORT);
-  };
 
   const showPassWord = value => {
     setHidePassword(!value);
@@ -52,21 +49,20 @@ const Login = ({navigation}) => {
 
   const logIn = async () => {
     setIsModalVisible(true);
-    try {
-      const response = await axios({
-        method: 'post',
-        url: `${BASE_URL}/login`,
-        data: JSON.stringify({email: email, password: password}),
-        headers: {'Content-Type': 'application/json'},
-      });
+    const response = await postmethod({
+      endUrl: 'login',
+      dataObject: {email: email, password: password},
+      headers: {'Content-Type': 'application/json'},
+    });
+    if (response.status === 200) {
       setIsModalVisible(false);
-
+      showToast('Signed In successfully');
       const token = response.data.token;
       storeDetails(token);
       storeTokenInAsync(token);
-    } catch (error) {
+    } else {
       setIsModalVisible(false);
-      if (error.response.status === 401) {
+      if (response.response.status === 401) {
         showToast('Incorrect email or password');
       } else {
         showToast('Network error');
@@ -90,62 +86,84 @@ const Login = ({navigation}) => {
         count += 1;
       }
     }
-    console.log({count, errorMessage});
     if (count === Object.keys(errorMessage).length) {
       logIn();
     }
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <Header title={'Sign in to your Account'} />
-        <View
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            marginLeft: 20,
-            marginRight: 20,
-          }}>
-          <InputText
-            placeholder={'Email'}
-            onChangeText={setEmail}
-            error={errorMessage.email}
-            keyboardType={'email-address'}
-          />
-          <ShowError message={errorMessage.email} />
-          <InputText
-            placeholder={'Password'}
-            onChangeText={setPassword}
-            secureText={hidePassword}
-            error={errorMessage.password}
-          />
-          <ShowError message={errorMessage.password} />
-          <CheckBox onPress={showPassWord} value={hidePassword} />
-          <Button
-            onPress={validation}
-            backgroundColor={'blue'}
-            textColor={'white'}
-            text={'Login'}
-          />
-          <Button
-            onPress={() => navigation.navigate('Registration')}
-            backgroundColor={'white'}
-            textColor={'blue'}
-            text={'Register'}
-            borderColor={'blue'}
-            borderWidth={1}
-          />
-          <View style={{alignItems: 'center'}}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.container}>
+          <Header title={'Sign in to your Account'} />
+          <View style={styles.textInputAndButtonView}>
+            <InputText
+              placeholder={'Email'}
+              onChangeText={setEmail}
+              keyboardType={'email-address'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    email: true,
+                  };
+                });
+              }}
+              error={errorMessage.email}
+            />
+            <ShowError message={errorMessage.email} />
+            <InputText
+              placeholder={'Password'}
+              onChangeText={setPassword}
+              secureText={hidePassword}
+              error={errorMessage.password}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    password: false,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.password} />
+            <CheckBox onPress={showPassWord} value={hidePassword} />
+            <Button
+              onPress={() => {
+                validation();
+                Keyboard.dismiss();
+              }}
+              backgroundColor={'blue'}
+              textColor={'white'}
+              text={'Login'}
+            />
+            <Button
+              onPress={() => navigation.navigate('Registration')}
+              backgroundColor={'white'}
+              textColor={'blue'}
+              text={'Register'}
+              borderColor={'blue'}
+              borderWidth={1}
+            />
+            <View style={{alignItems: 'center'}}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{alignItems: 'center'}}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ContactUsScreen')}>
+                <Text style={{...styles.forgotPasswordText, marginTop: 20}}>
+                  Contact Us
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          <ModalView visible={isModalVisible} />
         </View>
-        <ModalView visible={isModalVisible} />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -153,6 +171,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  textInputAndButtonView: {
+    flex: 1,
+    // backgroundColor: 'red',
+    // alignSelf: 'stretch',
+    marginHorizontal: 20,
   },
   forgotPasswordText: {
     marginTop: 30,

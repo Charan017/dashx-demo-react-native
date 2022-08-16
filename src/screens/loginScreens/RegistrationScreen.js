@@ -1,5 +1,11 @@
-import {View, StyleSheet, ToastAndroid} from 'react-native';
 import React, {useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  ToastAndroid,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import InputText from '../../components/inputText';
 import axios from 'axios';
 import ShowError from '../../components/showError';
@@ -9,7 +15,9 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Header from '../../components/header';
 import Button from '../../components/button';
 import CheckBox from '../../components/checkBox';
-import {BASE_URL} from '../../components/APIClient';
+import {BASE_URL} from '../../constants/APIClient';
+import {showToast} from '../../utils/LocalStorage';
+import {postmethod} from '../../utils/LocalStorage';
 
 export default function RegistrationScreen({navigation}) {
   const [firstName, setFirstName] = useState('');
@@ -24,10 +32,6 @@ export default function RegistrationScreen({navigation}) {
     email: false,
     password: false,
   });
-
-  const showToast = responseDaata => {
-    ToastAndroid.show(responseDaata, ToastAndroid.SHORT);
-  };
 
   const storeFirstName = value => {
     setFirstName(value);
@@ -51,25 +55,24 @@ export default function RegistrationScreen({navigation}) {
 
   const register = async () => {
     setModal(true);
-    try {
-      const response = await axios({
-        method: 'post',
-        url: `${BASE_URL}/register`,
-        data: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          password,
-        }),
-        headers: {'Content-Type': 'application/json'},
-      });
+    const response = await postmethod({
+      endUrl: 'register',
+      dataObject: {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        password: password,
+      },
+      headers: {'Content-Type': 'application/json'},
+    });
+    if (response.status === 201) {
       setModal(false);
       showToast(response.data.message);
-    } catch (error) {
+    } else {
       setModal(false);
-      if (error.response.status === 409) {
+      if (response.response.status === 409) {
         showToast('Email already exist');
-      } else if (error.response.status === 500) {
+      } else if (response.response.status === 500) {
         showToast('Internal server error');
       } else {
         showToast('Network error');
@@ -99,68 +102,113 @@ export default function RegistrationScreen({navigation}) {
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={{flex: 1, alignItems: 'center', backgroundColor: '#FFFFFF'}}>
-        <ModalView modal={modal} />
-        <Header title={'Register'} />
-        <View
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            marginLeft: 20,
-            marginRight: 20,
-          }}>
-          <InputText
-            placeholder={'First Name'}
-            onclick={storeFirstName}
-            error={errorMessage.firstName}
-            firstTextInput={true}
-            autoCapitalize={'words'}
-          />
-          <ShowError message={errorMessage.firstName} />
-          <InputText
-            placeholder={'Last Name'}
-            onclick={storeLastName}
-            error={errorMessage.lastName}
-            autoCapitalize={'words'}
-          />
-          <ShowError message={errorMessage.lastName} />
-          <InputText
-            placeholder={'Email'}
-            onclick={storeEmail}
-            error={errorMessage.email}
-            keyboardType={'email-address'}
-          />
-          <ShowError message={errorMessage.email} />
-          <InputText
-            placeholder={'Password'}
-            onclick={storePassword}
-            secureText={hidePassword}
-            error={errorMessage.password}
-          />
-          <ShowError message={errorMessage.password} />
-          <CheckBox onPress={showPassWord} value={hidePassword} />
-          <Button
-            onclickFunction={validation}
-            backgroundColor={'blue'}
-            textColor={'white'}
-            text={'Register'}
-          />
-          <Button
-            onclickFunction={() => navigation.navigate('Login')}
-            backgroundColor={'white'}
-            textColor={'blue'}
-            text={'Log in'}
-            borderColor={'blue'}
-            borderWidth={1}
-          />
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.container}>
+          <ModalView visible={modal} />
+          <Header title={'Register'} />
+          <View style={styles.inputTextAndButtonView}>
+            <InputText
+              placeholder={'First Name'}
+              onChangeText={storeFirstName}
+              error={errorMessage.firstName}
+              firstTextInput={true}
+              autoCapitalize={'words'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    firstName: false,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.firstName} />
+            <InputText
+              placeholder={'Last Name'}
+              onChangeText={storeLastName}
+              error={errorMessage.lastName}
+              autoCapitalize={'words'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    lastName: false,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.lastName} />
+            <InputText
+              placeholder={'Email'}
+              onChangeText={storeEmail}
+              error={errorMessage.email}
+              keyboardType={'email-address'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    email: false,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.email} />
+            <InputText
+              placeholder={'Password'}
+              onChangeText={storePassword}
+              secureText={hidePassword}
+              error={errorMessage.password}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    password: false,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.password} />
+            <CheckBox onPress={showPassWord} value={hidePassword} />
+            <Button
+              onPress={() => {
+                validation();
+                Keyboard.dismiss();
+              }}
+              backgroundColor={'blue'}
+              textColor={'white'}
+              text={'Register'}
+            />
+            <Button
+              onPress={() => navigation.navigate('Login')}
+              backgroundColor={'white'}
+              textColor={'blue'}
+              text={'Log in'}
+              borderColor={'blue'}
+              borderWidth={1}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  inputTextAndButtonView: {
+    flex: 1,
+    alignSelf: 'stretch',
+    marginLeft: 20,
+    marginRight: 20,
+  },
   registerStyle: {
     alignItems: 'center',
     backgroundColor: 'blue',

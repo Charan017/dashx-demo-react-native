@@ -1,44 +1,42 @@
-import {View, Text, Image, StyleSheet} from 'react-native';
 import React from 'react';
+import {View, Text, Image, StyleSheet} from 'react-native';
 
-export default function Header({title}) {
+const Header = ({title}) => {
   return (
-    <View
-      style={{
-        flex: 0.5,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-      }}>
+    <View style={styles.container}>
       <View style={{flexDirection: 'row', marginTop: 50}}>
         <Image
           style={styles.logo}
           source={require('../assets/dashXLogo.png')}
         />
-        <Text
-          style={{
-            fontSize: 25,
-            color: 'black',
-            fontWeight: 'bold',
-          }}>
-          Demo App
-        </Text>
+        <Text style={styles.demoAppText}>Demo App</Text>
       </View>
-      <Text
-        style={{
-          fontSize: 20,
-          color: 'black',
-          fontWeight: 'bold',
-        }}>
-        {title}
-      </Text>
+      <Text style={styles.titleText}>{title}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 0.5,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
   logo: {
     marginRight: 20,
     width: 35,
     height: 35,
   },
+  demoAppText: {
+    fontSize: 25,
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  titleText: {
+    fontSize: 20,
+    color: 'black',
+    fontWeight: 'bold',
+  },
 });
+
+export default Header;

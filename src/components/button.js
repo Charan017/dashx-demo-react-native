@@ -1,15 +1,16 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
-import { BUTTON_BACKGROUND_COLOR_PRIMARY } from '../styles/global';
+import {Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {BUTTON_BACKGROUND_COLOR_PRIMARY} from '../styles/global';
 
-export default function Button({
+const Button = ({
   onPress,
   backgroundColor,
   textColor,
   text,
   borderColor,
   borderWidth,
-}) {
+  style = {},
+}) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -22,15 +23,18 @@ export default function Button({
         paddingHorizontal: 12,
         borderColor: borderColor,
         borderWidth: borderWidth,
+        ...style,
       }}>
-      <Text
-        style={{
-          color: textColor,
-          fontSize: 16,
-          fontWeight: '500',
-        }}>
-        {text}
-      </Text>
+      <Text style={{...styles.text, color: textColor}}>{text}</Text>
     </TouchableOpacity>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  text: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});
+
+export default Button;

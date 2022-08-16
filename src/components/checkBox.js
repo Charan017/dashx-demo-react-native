@@ -1,26 +1,41 @@
-import {Text, Image, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
+import {Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 
-export default function CheckBox({onPress, value}) {
+const CheckBox = ({onPress, value}) => {
   const [selected, setSelected] = useState(false);
   return (
     <TouchableOpacity
-      style={{flexDirection: 'row', marginTop: 9}}
+      style={styles.touchable}
       onPress={() => {
         setSelected(value);
         onPress(value);
       }}>
       <Image
-        style={{width: 25, height: 25}}
+        style={styles.image}
         source={
           selected === true
             ? require('../assets/selectBox.png')
             : require('../assets/unselectBox.png')
         }
       />
-      <Text style={{marginTop: 3, marginLeft: 5, color: 'black'}}>
-        Show Password
-      </Text>
+      <Text style={styles.text}>Show Password</Text>
     </TouchableOpacity>
   );
-}
+};
+const styles = StyleSheet.create({
+  touchable: {
+    flexDirection: 'row',
+    marginTop: 9,
+  },
+  image: {
+    width: 25,
+    height: 25,
+  },
+  text: {
+    marginTop: 3,
+    marginLeft: 5,
+    color: 'black',
+  },
+});
+
+export default CheckBox;

@@ -1,9 +1,9 @@
 import {StyleSheet} from 'react-native';
 
-export const BUTTON_BACKGROUND_COLOR_PRIMARY = 'lightblue';
+export const BUTTON_BACKGROUND_COLOR_PRIMARY = 'blue';
 
 export const globalStyles = StyleSheet.create({
-  Container: {
+  container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,22 +1,26 @@
 import axios from 'axios';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   Image,
-  Platform,
   StyleSheet,
   Text,
-  ToastAndroid,
   View,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
-import {TouchableOpacity} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {BASE_URL} from '../../components/APIClient';
+import {BASE_URL} from '../../constants/APIClient';
 import Button from '../../components/button';
 import InputText from '../../components/inputText';
 import ModalView from '../../components/modal';
 import ShowError from '../../components/showError';
 import validate from '../../components/validator';
 import AppContext from '../../useContext/AppContext';
+import {showToast} from '../../utils/LocalStorage';
+import DocumentPicker from 'react-native-document-picker';
+import {patchMethod} from '../../utils/LocalStorage';
+import {getMethod} from '../../utils/LocalStorage';
 
 const Profile = () => {
   const {userToken, user, setUser} = useContext(AppContext);
@@ -26,17 +30,9 @@ const Profile = () => {
     first_name: false,
     last_name: false,
   });
-  const [updateFlag, setUpdateFlag] = useState(false);
-  const [imageFlag, setImageFlag] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const [tempUser, setTempUser] = useState(user || {});
-
-  const showToast = responseDaata => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(responseDaata, ToastAndroid.SHORT);
-    }
-  };
 
   const updateField = fieldKey => fieldValue => {
     setTempUser(old => ({
@@ -45,34 +41,21 @@ const Profile = () => {
     }));
   };
 
-  const handleImage = () => {
-    setUpdateFlag(true);
-    setImageFlag(false);
-  };
-
-  const handleUpdate = () => {
-    setUpdateFlag(false);
-    setImageFlag(true);
-  };
-
   const updateProfile = async () => {
     setIsModalVisible(true);
-    try {
-      const response = await axios.patch(
-        `${BASE_URL}/update-profile`,
-        tempUser,
-        {
-          headers: {
-            'Content-type': 'application/json',
-            Authorization: 'Bearer '.concat(userToken),
-          },
-        },
-      );
+    const response = await patchMethod({
+      endUrl: 'update-profile',
+      dataObject: tempUser,
+      headers: {
+        'Content-type': 'application/json',
+        Authorization: 'Bearer '.concat(userToken),
+      },
+    });
+    if (response.status === 200) {
       setIsModalVisible(false);
       showToast('Profile Successfully Updated');
-      setUser(response.data);
-    } catch (error) {
-      console.log({error});
+      setUser(response.data.user);
+    } else {
       setIsModalVisible(false);
       if (error?.response?.status === 401) {
         showToast('Unauthorized');
@@ -88,7 +71,6 @@ const Profile = () => {
     let count = 0;
     for (let key in errorMessage) {
       let validationResponse = validate(key, tempUser[key]);
-      console.log(tempUser.email);
       setErrorMessage(prev => {
         return {
           ...prev,
@@ -104,69 +86,85 @@ const Profile = () => {
 
     if (count === Object.keys(errorMessage).length) {
       updateProfile();
-      handleUpdate();
     }
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <ModalView visible={isModalVisible} />
-        <View style={styles.horizontalStack}>
-          <View style={{alignItems: 'center', marginTop: 40}}>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.container}>
+          <ModalView visible={isModalVisible} />
+          <View style={styles.titleView}>
             <Text style={styles.title}>Profile</Text>
           </View>
-          <View style={{marginTop: 40}}>
-            <TouchableOpacity onPress={handleImage}>
-              {imageFlag ? (
-                <Image
-                  style={styles.image}
-                  source={require('../../assets/edit.png')}
-                />
-              ) : null}
+          <View style={styles.avatar}>
+            <Image style={{width: 80, height: 80, borderRadius: 40}} />
+            <TouchableOpacity
+              style={{position: 'absolute', right: 0, bottom: 0}}>
+              <Image
+                style={styles.imageLogo}
+                source={require('../../assets/addPhoto.png')}
+              />
             </TouchableOpacity>
           </View>
+          <View style={styles.textFieldView}>
+            <InputText
+              onChangeText={updateField('first_name')}
+              value={tempUser.first_name}
+              error={errorMessage.first_name}
+              autoCapitalize={'words'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    first_name: true,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.first_name} />
+            <InputText
+              onChangeText={updateField('last_name')}
+              value={tempUser.last_name}
+              error={errorMessage.last_name}
+              autoCapitalize={'words'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    last_name: true,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.last_name} />
+            <InputText
+              onChangeText={updateField('email')}
+              value={tempUser.email}
+              error={errorMessage.email}
+              keyboardType={'email-address'}
+              onFocus={() => {
+                setErrorMessage(prev => {
+                  return {
+                    ...prev,
+                    email: true,
+                  };
+                });
+              }}
+            />
+            <ShowError message={errorMessage.email} />
+            <Button
+              onPress={() => {
+                validation();
+                Keyboard.dismiss();
+              }}
+              textColor={'white'}
+              text={'Update'}
+            />
+          </View>
         </View>
-        <View
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            marginLeft: 20,
-            marginRight: 20,
-          }}>
-          <InputText
-            placeholder={'First Name'}
-            onChangeText={updateField('first_name')}
-            value={tempUser.first_name}
-            error={errorMessage.first_name}
-            editable={updateFlag}
-            autoCapitalize={'words'}
-          />
-          <ShowError message={errorMessage.first_name} />
-          <InputText
-            placeholder={'Last Name'}
-            onChangeText={updateField('last_name')}
-            value={tempUser.last_name}
-            error={errorMessage.last_name}
-            editable={updateFlag}
-            autoCapitalize={'words'}
-          />
-          <ShowError message={errorMessage.last_name} />
-          <InputText
-            placeholder={'Email'}
-            onChangeText={updateField('email')}
-            value={tempUser.email}
-            error={errorMessage.email}
-            editable={updateFlag}
-            keyboardType={'email-address'}
-          />
-          <ShowError message={errorMessage.email} />
-          {updateFlag && (
-            <Button onPress={validation} textColor={'white'} text={'Update'} />
-          )}
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -180,17 +178,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     paddingHorizontal: 20,
+    marginTop: 40,
+  },
+  titleView: {
+    marginLeft: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
     color: 'black',
-    paddingRight: 15,
   },
-  image: {
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'lightgrey',
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  imageLogo: {
     width: 30,
     height: 30,
-    resizeMode: 'contain',
+  },
+  textFieldView: {
+    flex: 1,
+    alignSelf: 'stretch',
+    marginHorizontal: 20,
   },
 });
 

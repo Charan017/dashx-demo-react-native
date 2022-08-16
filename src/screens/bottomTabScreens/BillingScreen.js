@@ -6,7 +6,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 const Billing = () => {
   return (
     <SafeAreaView style={{flex: 1}}>
-      <View style={globalStyles.Container}>
+      <View style={globalStyles.container}>
         <Text>Billing</Text>
       </View>
     </SafeAreaView>

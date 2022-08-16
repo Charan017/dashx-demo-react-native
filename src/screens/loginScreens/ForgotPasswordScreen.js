@@ -1,23 +1,27 @@
-import {View, Text, TouchableOpacity, ToastAndroid} from 'react-native';
 import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ToastAndroid,
+  StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import InputText from '../../components/inputText';
 import ShowError from '../../components/showError';
 import validate from '../../components/validator';
 import ModalView from '../../components/modal';
-import axios from 'axios';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Header from '../../components/header';
 import Button from '../../components/button';
-import {BASE_URL} from '../../components/APIClient';
+import {showToast} from '../../utils/LocalStorage';
+import {postmethod} from '../../utils/LocalStorage';
 
-export default function ForgotPasswordScreen({navigation}) {
+const ForgotPasswordScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState(false);
   const [modal, setModal] = useState(false);
-
-  const showToast = responseDaata => {
-    ToastAndroid.show(responseDaata, ToastAndroid.SHORT);
-  };
 
   const storeEmail = value => {
     setEmail(value);
@@ -25,22 +29,21 @@ export default function ForgotPasswordScreen({navigation}) {
 
   const forgot = async () => {
     setModal(true);
-    try {
-      await axios({
-        method: 'post',
-        url: `${BASE_URL}/forgot-password`,
-        data: JSON.stringify({email: email}),
-        headers: {'Content-Type': 'application/json'},
-      });
+
+    const response = await postmethod({
+      endUrl: 'forgot-password',
+      dataObject: {email: email},
+      headers: {'Content-Type': 'application/json'},
+    });
+    if (response.status === 200) {
       setModal(false);
       showToast('link was sent to your mail');
-    } catch (error) {
+    } else {
       setModal(false);
-      if (error?.response?.status === 500) {
+      if (response?.response?.status === 500) {
         showToast('Internal server error');
       } else {
         showToast('Network error');
-        console.log({error});
       }
     }
   };
@@ -54,46 +57,68 @@ export default function ForgotPasswordScreen({navigation}) {
   };
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={{flex: 1, alignItems: 'center', backgroundColor: 'white'}}>
-        <ModalView modal={modal} />
-        <Header title={'Forgot Password'} />
-        <View
-          style={{
-            flex: 1,
-            alignSelf: 'stretch',
-            marginLeft: 20,
-            marginRight: 20,
-          }}>
-          <InputText
-            placeholder={'Email'}
-            onclick={storeEmail}
-            firstTextInput={true}
-            error={errorMessage}
-            keyboardType={'email-address'}
-          />
-          <ShowError message={errorMessage} />
-          <Button
-            onclickFunction={validation}
-            backgroundColor={'blue'}
-            textColor={'white'}
-            text={'Submit'}
-          />
-          <View style={{alignItems: 'center'}}>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: 'blue',
-                  fontWeight: '500',
-                  marginTop: 30,
-                }}>
-                Back to Login
-              </Text>
-            </TouchableOpacity>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}>
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.container}>
+          <ModalView visible={modal} />
+          <Header title={'Forgot Password'} />
+          <View style={styles.textInputAndButton}>
+            <InputText
+              placeholder={'Email'}
+              onChangeText={storeEmail}
+              firstTextInput={true}
+              error={errorMessage}
+              keyboardType={'email-address'}
+              onFocus={() => {
+                setErrorMessage(false);
+              }}
+            />
+            <ShowError message={errorMessage} />
+            <Button
+              onPress={() => {
+                validation();
+                Keyboard.dismiss();
+              }}
+              backgroundColor={'blue'}
+              textColor={'white'}
+              text={'Submit'}
+            />
+            <View style={styles.backToLoginView}>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.backToLoginText}>Back to Login</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  textInputAndButton: {
+    flex: 1,
+    alignSelf: 'stretch',
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  backToLoginView: {
+    alignItems: 'center',
+  },
+  backToLoginText: {
+    fontSize: 16,
+    color: 'blue',
+    fontWeight: '500',
+    marginTop: 30,
+  },
+});
+
+export default ForgotPasswordScreen;

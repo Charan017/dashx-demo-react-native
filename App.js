@@ -1,15 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {NavigationContainer} from '@react-navigation/native';
 import React, {useEffect, useMemo, useState} from 'react';
 import {StatusBar} from 'react-native';
-import ModalView from './src/components/modal';
 import HomeStack from './src/routes/HomeStack';
 import Navigator from './src/routes/loginStack';
-import AppContext, {AppProvider} from './src/useContext/AppContext';
+import AppContext from './src/useContext/AppContext';
 import {getStoredValueForKey, storeValueForKey} from './src/utils/LocalStorage';
 
 function App() {
   const [isProcessed, setIsProcessed] = useState(false);
+  const [getPost, setGetPost] = useState({});
 
   const [user, updateUser] = useState();
   const [userToken, setUserToken] = useState('');
@@ -38,6 +37,8 @@ function App() {
         setUserToken,
         user,
         setUser,
+        getPost,
+        setGetPost,
       }}>
       <NavigationContainer>
         <StatusBar translucent backgroundColor={'white'} />

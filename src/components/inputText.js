@@ -1,8 +1,7 @@
-import {View, Text, TextInput, StyleSheet} from 'react-native';
-import React, {useState} from 'react';
-// import {FloatingLabelInput} from 'react-native-floating-label-input';
+import {TextInput, StyleSheet} from 'react-native';
+import React from 'react';
 
-export default function InputText(props) {
+const InputText = props => {
   const {
     placeholder,
     onChangeText,
@@ -13,6 +12,7 @@ export default function InputText(props) {
     editable,
     keyboardType,
     autoCapitalize,
+    onFocus,
   } = props;
   return (
     <TextInput
@@ -22,6 +22,7 @@ export default function InputText(props) {
       value={value}
       onChangeText={onChangeText}
       editable={editable}
+      onFocus={onFocus}
       style={[
         styles.textInputStyle,
         {borderColor: error === false || error === true ? 'grey' : 'red'},
@@ -30,7 +31,7 @@ export default function InputText(props) {
       autoCapitalize={autoCapitalize}
     />
   );
-}
+};
 
 const styles = StyleSheet.create({
   textInputStyle: {
@@ -41,3 +42,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 });
+
+export default InputText;

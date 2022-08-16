@@ -1,10 +1,19 @@
-import {View, Text} from 'react-native';
 import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
 
-export default function ShowError({message}) {
+const ShowError = ({message}) => {
   return message === false || message === true ? (
     <View></View>
   ) : (
-    <Text style={{marginLeft: 10, color: 'red'}}>{message}</Text>
+    <Text style={styles.text}>{message}</Text>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  text: {
+    marginLeft: 10,
+    color: 'red',
+  },
+});
+
+export default ShowError;

@@ -1,28 +1,65 @@
 import React, {useContext} from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AppContext from '../../useContext/AppContext';
 
 const MoreScreen = ({navigation}) => {
   const {setUser} = useContext(AppContext);
 
+  const moreOptions = [
+    {
+      id: '1',
+      title: 'Billing',
+      routeName: 'Billing',
+    },
+    {
+      id: '2',
+      title: 'Profile',
+      routeName: 'Profile',
+    },
+    {
+      id: '3',
+      title: 'Settings',
+      routeName: 'Settings',
+    },
+    {
+      id: '4',
+      title: 'Log out',
+    },
+  ];
+
   const performLogout = () => {
     setUser();
   };
 
-  const navigateToUpdateProfileScreen = () => {
-    navigation.navigate('Profile');
+  const navigateToUpdateProfileScreen = title => {
+    navigation.navigate(title);
   };
 
   return (
     <SafeAreaView style={styles.containerView}>
-      <View>
-        {/* // TODO Change this to use FlatList */}
-        <ButtonView text="Billing" />
-        <ButtonView text="Profile" onPress={navigateToUpdateProfileScreen} />
-        <ButtonView text="Settings" />
-        <ButtonView text="Log out" onPress={performLogout} />
-      </View>
+      <FlatList
+        style={{flex: 1}}
+        data={moreOptions}
+        renderItem={({item}) => (
+          <ButtonView
+            text={item.title}
+            onPress={
+              item.id === '4'
+                ? performLogout
+                : () => navigateToUpdateProfileScreen(item.routeName)
+            }
+          />
+        )}
+        keyExtractor={item => item.id}
+      />
     </SafeAreaView>
   );
 };
@@ -35,7 +72,7 @@ const ButtonView = ({text, onPress}) => {
       <TouchableOpacity style={styles.button} onPress={onPress}>
         <Text style={styles.textContainer}>{text}</Text>
         <Image
-          source={require('../assets/disclosure.png')}
+          source={require('../../assets/disclosure.png')}
           style={styles.disclosureImageStyle}
         />
       </TouchableOpacity>
