@@ -5,6 +5,7 @@ export const BASE_URL = 'https://node.dashxdemo.com';
 
 const normalizedHeaders = async (headers = {}) => {
   const userToken = await getStoredValueForKey('userToken');
+  // console.log(userToken);
   const authHeaders = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${userToken}`,
@@ -28,6 +29,7 @@ const processNetworkError = error => {
 
 export const APIGet = async ({endUrl, headers}) => {
   const finalHeaders = await normalizedHeaders(headers);
+  // console.log(finalHeaders);
   try {
     const response = await axios({
       method: 'GET',

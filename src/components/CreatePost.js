@@ -71,6 +71,7 @@ export const CreatePostModal = ({visible, dismissModal}) => {
 
   const onPickPostImage = async pickedMedia => {
     setShowActionSheet(false);
+    console.log(pickedMedia);
 
     try {
       if (mediaType === 'image') {
@@ -78,6 +79,7 @@ export const CreatePostModal = ({visible, dismissModal}) => {
           pickedMedia,
           'e8b7b42f-1f23-431c-b739-9de0fba3dadf',
         );
+        console.log(response);
         setStorePostImage(oldUser => ({
           ...(oldUser || {}),
           postImage: response?.data?.asset,
@@ -91,6 +93,7 @@ export const CreatePostModal = ({visible, dismissModal}) => {
           ...(oldUser || {}),
           postVideo: response?.data?.asset,
         }));
+        console.log(response);
       }
 
       showToast('Asset uploaded');

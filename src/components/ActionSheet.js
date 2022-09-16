@@ -3,6 +3,7 @@ import ActionSheet from 'react-native-actionsheet';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {showToast} from '../utils/LocalStorage';
 import {checkStorageReadPermission} from '../utils/PermissionUtils';
+import {getRealPathFromURI} from 'react-native-get-real-path';
 
 export const FilePickerActionSheet = ({
   onPickFile,
@@ -42,6 +43,14 @@ export const FilePickerActionSheet = ({
           const {
             assets: [imagePickerResponse],
           } = await actions[index]?.({mediaType: 'video', includeBase64: true});
+          if (imagePickerResponse.uri.startsWith('content://')) {
+            // imagePickerResponse.uri1 = imagePickerResponse.uri;
+
+            imagePickerResponse.uri = `file://${await getRealPathFromURI(
+              imagePickerResponse.uri,
+            )}`;
+            // imagePickerResponse.uri = `file://${imagePickerResponse.fileName}`;
+          }
           onPickFile(imagePickerResponse);
         }
       } catch (error) {
